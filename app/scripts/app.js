@@ -10,13 +10,13 @@ var bm = angular.module('borrow_memo', ['firebase', 'ngRoute', 'ngDialog']);
 bm.config(['$routeProvider', function($routeProvider) {
 
     var commonData = function(city){
-       var value =
+        var value =
         {
             templateUrl: 'views/mainActivityPage.html',
             controller: 'MainActivityCtrl',
             resolve: {
                 BorrowedItems: ['DataBaseService', function (DataBaseService) {
-                    return DataBaseService.getItems(city);
+                    return DataBaseService.getItemsOnce(city);
                 }],
                 SelectedCity: function () {
                     return city;
@@ -30,17 +30,17 @@ bm.config(['$routeProvider', function($routeProvider) {
     };
 
     $routeProvider.
-        when('/login', {
-            templateUrl: 'views/login.html',
-            controller: 'LoginCtrl'
-        }).
-        when('/london',commonData('london')).
-        when('/warsaw',commonData('warsaw')).
-        when('/madrid',commonData('madrid')).
-        when('/banglore',commonData('banglore')).
-        otherwise({
-            redirectTo: '/login'
-        });
+    when('/login', {
+        templateUrl: 'views/login.html',
+        controller: 'LoginCtrl'
+    }).
+    when('/london',commonData('london')).
+    when('/warsaw',commonData('warsaw')).
+    when('/madrid',commonData('madrid')).
+    when('/banglore',commonData('banglore')).
+    otherwise({
+        redirectTo: '/login'
+    });
 }]);
 
 bm.run(function($rootScope, $window, $location, AuthService, $route) {
@@ -53,7 +53,12 @@ bm.run(function($rootScope, $window, $location, AuthService, $route) {
             AuthService.setIsAuthenticated(true); //necessary for refresh of website
             var path = $location.path();
             $rootScope.$apply(function() {
-                $location.path(path);
+                if (path=='/login'){
+                    $location.path('/london');
+                }else {
+                    $location.path(path);
+                }
+
             });
 
         }else{
@@ -73,12 +78,11 @@ bm.run(function($rootScope, $window, $location, AuthService, $route) {
     $rootScope.$on( "$routeChangeStart", function(event, next, current) {
         var auth = AuthService.isAuthenticatedUser();
         if ((next.access && next.access.requiredLogin) && !auth && isCheckedState) {
-            //debugger;
             $location.path("/login");
         }
         //no redirect authentificated user to login:
         else if (auth && ((next.redirectTo!=undefined && next.redirectTo.localeCompare('/login')==0)
-         || (next.$$route!=undefined && next.$$route.originalPath!=undefined && next.$$route.originalPath.localeCompare('/login')==0)) ){
+            || (next.$$route!=undefined && next.$$route.originalPath!=undefined && next.$$route.originalPath.localeCompare('/login')==0)) ){
             if (current.$$route!=undefined){
                 $location.path(current.$$route.originalPath);
             }else{
